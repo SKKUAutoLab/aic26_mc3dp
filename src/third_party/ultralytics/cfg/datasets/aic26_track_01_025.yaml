@@ -1,0 +1,25 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
+# VisDrone2019-DET dataset https://github.com/VisDrone/VisDrone-Dataset by Tianjin University
+# Documentation: https://docs.ultralytics.com/datasets/detect/visdrone/
+# Example usage: yolo train data=VisDrone.yaml
+# parent
+# ├── ultralytics
+# └── datasets
+#     └── VisDrone ← downloads here (2.3 GB)
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: /media/vsw-ws-05/hdd-02/AI_City_Challenge/MTMC_Tracking_2026_processing/labels/yolo_detection/Warehouse_025_9000_300/ # dataset root dir
+train: images/train/ # train images (relative to 'path') 6471 images
+val: images/val/ # val images (relative to 'path') 548 images
+test: images/val/ # test-dev images (optional) 1610 images
+
+# Classes
+names:
+  0: Person
+  1: Forklift
+  2: NovaCarter
+  3: Transporter
+  4: FourierGR1T2
+  5: AgilityDigit
+  6: PalletTruck

@@ -1,0 +1,82 @@
+#
+#     /\_____/\
+#    /  o   o  \
+#   ( ==  ^  == )
+#    )         (
+#   (           )
+#  ( (  )   (  ) )
+# (__(__)___(__)__)
+#
+# Installation:
+#   poetry install
+#
+# References:
+#   - pyproject.toml: https://packaging.python.org/en/latest/
+#   - poetry        : https://python-poetry.org/docs/
+#   - uv            : https://docs.astral.sh/uv/
+
+
+# [project.urls]
+# Homepage      = ""
+# Documentation = ""
+# Repository    = ""
+# Issues        = ""
+
+# --- UV SPECIFIC ---
+[tool.uv]
+package = true
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'"
+]
+
+[tool.uv.sources]
+mon = { workspace = true }
+
+# --- POETRY SPECIFIC ---
+[tool.poetry]
+name            = "AIC26-Track01-AutoLab-SKKU"
+version         = "0.1.0"
+description     = "AI City Challenge 2026 - Track 01: Multi-Camera 3D Perception of AutomationLab in Sungkyunkwan University"
+license         = "GNU General Public License v3.0"
+readme          = "README.md"
+authors       = [
+    "Automation Lab - Sungkyunkwan University",
+]
+maintainers   = [
+    "Automation Lab - Sungkyunkwan University",
+]
+keywords        = ["computer vision", "deep learning", "research"]
+classifiers     = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+]
+# package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
+packages = [
+    {include = "core"                    , from = "src"               },
+    {include = "tools"                   , from = "."               },
+    {include = "ultralytics"             , from = "src/third_party" },
+    {include = "rfdetr"                  , from = "src/third_party" },
+    {include = "rfdetr_plus"             , from = "src/third_party" },
+    {include = "botsort"                 , from = "src/third_party" },
+    {include = "torchreid"               , from = "src/third_party" },
+    {include = "segment_anything"        , from = "src/third_party" },
+    {include = "cosine_annealing_warmup" , from = "src/third_party" },
+]
+include = [
+    "LICENSE",
+    "pyproject.toml",
+]
+exclude  = []
+
+[tool.poetry.extras]
+dev = [
+    "src/third_party/ultralytics"
+]
+
+[tool.poetry.dependencies]
+# mon = { path = "../../libs/mon", develop = true }
+
+[build-system]
+requires      = ["poetry-core>=2.3.2,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

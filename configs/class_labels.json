@@ -1,0 +1,12 @@
+{
+  "class_labels" : 
+  [
+    { "name": "Person"       , "id": 0, "train_id": 0, "category": "aic26", "catId": 1, "color": [220, 20 , 60  ] },
+    { "name": "Forklift"     , "id": 1, "train_id": 1, "category": "aic26", "catId": 1, "color": [255, 140, 0   ] },
+    { "name": "NovaCarter"   , "id": 2, "train_id": 2, "category": "aic26", "catId": 1, "color": [255, 215, 0   ] },
+    { "name": "Transporter"  , "id": 3, "train_id": 3, "category": "aic26", "catId": 1, "color": [0  , 200, 0   ] },
+    { "name": "FourierGR1T2" , "id": 4, "train_id": 4, "category": "aic26", "catId": 1, "color": [0  , 191, 255 ] },
+    { "name": "AgilityDigit" , "id": 5, "train_id": 5, "category": "aic26", "catId": 1, "color": [138, 43 , 226 ] },
+    { "name": "PalletTruck"  , "id": 6, "train_id": 6, "category": "aic26", "catId": 1, "color": [255, 0  , 255 ] }
+  ]
+}
