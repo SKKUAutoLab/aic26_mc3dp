@@ -1,0 +1,233 @@
+---
+data:
+  root: &dataset "/media/vsw-ws-05/SSD_1/AI_City_Challenge/MTMC_Tracking_2026"
+  # Dataset name. It is also the name of the directory inside `data_dir`.
+  subset: &subset "test"
+  # Subset name. One of: [`dataset_a`, `dataset_b`].
+  scene_name: &scene_name "Warehouse_027"
+  # Camera name is also used as the unique ID (NO FILE EXTENSION).
+  scene_id: &scene_id 27
+  # Camera's unique ID.
+  file: "videos/*.mp4"
+  # Video file or image folder. By default, assume all video are put inside
+  shape: &shape [1080, 1920, 3]
+  # Input size as [H, W, C].
+  frame_rate: &frame_rate 30
+  # Frame rate of the video.
+  class_labels:
+    file: "configs/class_labels.json"
+    # Config file containing class_labels.
+  calibration:
+    file: "configs/Warehouse_027/calibration.json"
+    # Calibration file for the scene.
+  device: &device "0"
+  # CUDADevice, i.e. 0 or 0,1,2,3 or cpu
+  num_frames: 1800
+  # Number of frames to process. Set to -1 to process all frames.
+
+regions:
+ zone_camera: "configs/Warehouse_027/zone_camera"
+ # Config file containing the regions of interest (ROIs) in each Camera in image Coordinates
+ zone_bev: "configs/Warehouse_027/zone_bev"
+ # Config file containing the regions of interest (ROIs) in each Camera in World Coordinates
+
+detector:
+  name: "rfdetr"
+  # Name of the main model for detector
+  variant: "2xlarge"
+  # RF-DETR variant. One of: [nano, small, medium, large, base, xlarge, 2xlarge].
+  # NOTE: xlarge/2xlarge are "plus" models and require `pip install rfdetr[plus]`.
+  model_cfg:
+    # Detector model config.
+    num_classes: 7
+    # Number of classes.
+  # The detector model's variant name.
+  weights: "zoo/detection/rfdetr_aicity_wh027_2xlarge_r1920_b4_e200/checkpoint_best_ema.pth"
+  # Pretrained weights file.
+  shape: &detector_shape [1920, 1920, 3]
+  # Input size as [H, W, C]. RF-DETR square resolution = shape[0] = 1920 (must be
+  # divisible by patch_size * num_windows).
+  min_confidence: 0.1
+  # Detection confidence threshold. Disregard all detections that have a
+  # confidence lower than this value.
+  nms_max_overlap: 0.7
+  # Unused by RF-DETR (DETR is NMS-free); kept for schema compatibility.
+  device: *device
+  # CUDADevice, i.e. 0 or 0,1,2,3 or cpu
+  max_det: 300
+  # Maximum number of detections per image.
+  batch_size: 8
+  # Number of samples in one forward & backward pass.
+  folder_out: "rfdetr_aicity_wh027_2xlarge_r1920_b4_e200"
+  # The output folder
+
+reidentifier:
+  pose_estimator: 
+    name: "vitpose-plus-huge"
+    # Name of the pose estimator model.
+    model: "zoo/reidentification/vitpose-plus-huge"  
+    # Pretrained weights file.
+    # Maximum detection overlap (non-maxima suppression threshold).
+    device: *device
+    # CUDADevice, i.e. 0 or 0,1,2,3 or cpu
+    folder_out: "vitpose-plus-huge"
+    # The output folder
+  feature_extractor:
+    name: "kpr_aicity_market_test"
+    # Name of the feature extractor model.
+    config: "configs/kpr_aicity_market_test.yaml"
+    # Path to configuration file for the feature extractor model.
+    model: "zoo/reidentification/kpr/aicity_25.pth.tar"  
+    # Pretrained weights file.
+    backbone_pretrained_folder_path: "zoo/reidentification"
+    # Pretrained weights file for the backbone of the feature extractor model.      
+    device: *device
+    # CUDADevice, i.e. 0 or 0,1,2,3 or cpu
+    folder_out: "kpr_aicity_market_test"
+    # The output folder
+  batch_size: 8
+  # Number of samples in one forward & backward pass.
+  
+
+tracker:
+  name: "bot_sort"
+  # Name of the tracker.
+  max_age: &max_age 40
+  # Max number of frame keep the object before deleting.
+  min_hit: 10
+  # The number of frame which has matching bounding box of the detected object
+  # before the object is considered becoming the track.
+  iou_threshold: &iou_threshold_track 0.001
+  # The Intersection over Union between two track with their bounding box.
+  min_confidence_det: 0.25
+  # Detection confidence threshold. Disregard all detections that have a
+  # confidence lower than this value.
+  is_reload_model: False
+  # Does the tracking model need to be reset after running 1 sequence
+  track_high_thresh: 0.5
+  # threshold for the first association
+  track_low_thresh: 0.1 
+  # threshold for the second association
+  new_track_thresh: 0.7 
+  # threshold for init new track if the detection does not match any tracks
+  track_buffer: *max_age 
+  # buffer to calculate the time when to remove tracks
+  aspect_ratio_thresh: 1.6
+  # threshold for aspect ratio of the bounding box, used to filter out false positive detections
+  # 3.2, threshold for matching tracks (using distance matrix)
+  match_thresh_stage_1: 3.2
+  # 3.2, threshold for matching tracks (using distance matrix)
+  match_thresh_stage_2: 2.4
+  # 2.4, threshold for matching tracks (using distance matrix)
+  match_thresh_stage_3: 3.2
+  # 3.2, threshold for matching tracks (using distance matrix)
+  fuse_score: False 
+  # Whether to fuse confidence scores with the iou distances before matching
+  min_box_area: 10  
+  # threshold for min box areas(for tracker evaluation, not used for now)
+  iou: *iou_threshold_track 
+  # threshold for iou between two boxes
+  fuse-score: False
+  # Whether to fuse confidence scores with the iou distances before matching
+  # BoT-SORT settings
+  gmc_method: none # method of global motion compensation
+  # "orb", "sift", "ecc", "sparseOptFlow", "none"
+  proximity_thresh: 0.5
+  # Threshold for spatial proximity (IoU) between tracks and detections.
+  appearance_thresh: 0.2
+  # Threshold for appearance similarity (ReID embeddings) between tracks and detections.
+  with_reid: True
+  # whether to use ReID model for association
+  reid_model: ""
+  # Pretrained weights file.
+  asso_func: "iou"
+  # Association function. One of: ["iou", "giou", "ciou", "diou", "hiou"].
+  folder_out: "bot_sort"
+  # The output folder
+
+matching:
+  name: "re_identifier_matching"
+  # Name of the matching algorithm. 
+
+mtmc:
+  # BEV multi-camera fusion knobs (run_multi_camera_tracking.py). These mirror the
+  # code-level DEFAULT_MTMC; per-scene configs need this block only to override.
+  ankle_conf_thresh: 0.8
+  # Min keypoint score to trust an ankle as the ground anchor.
+  pose_conf_thresh: 0.3
+  # Min keypoint score to count a keypoint toward the >8-keypoint skeleton gate and
+  # to extrapolate a hip/knee into the ankle when both ankles are unconfident.
+  min_conf_keypoint_for_estimate: 8
+  # Require more than this many keypoints scoring >= pose_conf_thresh before trusting the
+  # skeleton to extrapolate an ankle from the leg chain (estimate skipped otherwise).
+  reid_group_thresh: 0.8  # 0.35 
+  # Max part-distance to group two persons across cameras.
+  bev_dist_thresh_by_class: [2.5, 5.0, 2.0, 2.0, 1.5, 1.0, 2.0]  # [1.0, 5.0, 2.0, 2.0, 1.5, 1.0, 2.0]
+  # m, per-class BEV gate (index 0..6) and Pass-B association base gate / floor.
+  # ["Person", "Forklift", "NovaCarter", "Transporter", "FourierGR1T2", "AgilityDigit", "PalletTruck"]
+  make_world_observation_mode: "weighted_mean"  
+  # cluster of bbox (CamObservation) ->world position (BEV location): max_confidence | mean | weighted_mean
+  w_bev: 0.5
+  # Weight of BEV vs ReID in the person track-association cost.
+  reid_track_thresh: 1.6  # 1.6
+  # Max gallery-distance to link a person observation to a track.
+  max_speed_m_s: 3.0
+  # Widens the association gate per coasted frame (+ max_speed/fps * age_missing).
+  new_track_min_sep: 1.5
+  # m, min separation from existing tracks required to spawn a new object_id.
+  max_age: 1800
+  # Frames a track may coast / a gap may be interpolated.
+  alpha_pos: 0.6
+  # EMA factor for the smoothed track position.
+  gallery_size: 300
+  # Capped ReID gallery length per track.
+  distance_to_polygon_thresh: 1.0
+  # m, max distance to consider a track outside the zone (for zone-based filtering).
+  interpolating_missing_frames_max_gap: 60
+  # Maximum number of frames to interpolate for a temporarily lost track.
+  projection_type:
+    skeleton: [0]
+    center_point: [2, 3]
+    top_bottom: null
+  # Projection type for each class. One of: ["skeleton", "center_point", "top_bottom"].
+  # ["Person", "Forklift", "NovaCarter", "Transporter", "FourierGR1T2", "AgilityDigit", "PalletTruck"]
+  # [  0,        1,          2,            3,                4,               5,              6      ]
+  force_match_track: False
+  # Whether to force match tracks across cameras even if the ReID distance is above the threshold.
+  bbox_ratio_filter: null
+  # Whether to filter out detections with a bounding box ratio greater than 0.5
+  height_estimation: null
+
+
+data_writer:
+  root: "/media/vsw-ws-05/SSD_1/AI_City_Challenge/MTMC_Tracking_2026_processing_baseline"
+  # Dataset name. It is also the name of the directory inside `data_dir`.
+  images: "images"
+  # Extract images
+  dst: null
+  # Output video file or a directory.
+  shape: *shape
+  # Output size [H, W, C].
+  frame_rate: *frame_rate
+  # Frame rate of the video.
+  dets_comp: "dets_comp"
+  # Store the compression of the full detection of each result of each images
+  dets_label: "dets_label"
+  # Store the full label of each result of each images by text file
+  poses_comp: "poses_comp"
+  # Store the compression of the full pose estimation of each result of each images
+  feats_comp: "feats_comp"
+  # Store the compression of the full feature of each result of each images
+  mots_single_comp : "mots_single_comp"
+  # Store the result of tracking in single camera/view
+  mots_single_comp_filtered : "mots_single_comp_filtered"
+  # Store the result of tracking in single camera/view after filtering
+  mots_multi : "mots_multi"
+  # Store the result of tracking in multiple cameras/views  
+  mots_multi_feat : "mots_multi_feat"
+  # Store the result of re-identifier in multiple cameras/views
+
+result_writer:
+  dst: *scene_name
+  name: *scene_name
+...

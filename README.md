@@ -7,13 +7,13 @@ Solution for 2026 AI City Challenge Track 1: Multi-Camera 3D Perception (Sim2Rea
 ---
 ## I. Dataset preparation
 
-##### a. Data download
+### a. AI City Challenge Test set
 
 Go to the website of AI-City Challenge to get the dataset.
 
 - https://www.aicitychallenge.org/2026-track1/
 
-Download dataset to the folder **<MTMC_Tracking_2026>**
+Download dataset to the folder **`MTMC_Tracking_2026`**
 
 The dataset folder structure should be as following:
 
@@ -31,18 +31,25 @@ The dataset folder structure should be as following:
 │   │   ├── Warehouse_024
 │   │   ├── Warehouse_025
 │   │   └── Warehouse_026
+│   │   └── Warehouse_027
 ```
+
+### b. Training Dataset
+
+You can download traing dataset from:
+
+https://drive.google.com/drive/folders/1FXWxqM2t09KGYVDnTSPTBgaZLAHV4g1V?usp=sharing
 
 ---
 ## II. Environment setup
 
-#### a. Installation MinicondaMinicondaMini|Anaconda and FFmpeg:
+### a. Installation MinicondaMinicondaMini|Anaconda and FFmpeg:
 
 Download & install Miniconda or Anaconda from https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html
 
 Install FFmpeg: https://www.ffmpeg.org/
 
-#### b. Create conda environment:
+### b. Create conda environment:
 
 Follow the instructions in the following files to install the required dependencies.
 
@@ -54,9 +61,13 @@ conda activate Syn2RealTrack
 bash setup.sh
 ```
 
-#### c. Load weights:
+### c. Load weights:
 
 Download each weight file and move them into the corresponding zoo folder:
+
+Link download:
+
+https://drive.google.com/drive/folders/1FXWxqM2t09KGYVDnTSPTBgaZLAHV4g1V?usp=sharing
 
 ```shell
 zoo
@@ -75,11 +86,11 @@ zoo
 ---
 ## III. Inference
 
-#### a. Adjust the configuration
+### a. Adjust the configuration
 
 Default link to the dataset in the code is:
 
-```ymal
+```yaml
 data:
   root: &dataset ".../MTMC_Tracking_2026"
 ...
@@ -87,11 +98,11 @@ data_writer:
   root: ".../MTMC_Tracking_2026_processing_baseline"
 ```
 
-".../MTMC_Tracking_2026" is the <input_folder>.
+`.../MTMC_Tracking_2026` is the `/path/to/input/`.
 
-".../MTMC_Tracking_2026_processing_baseline" is the <output_folder>.
+`.../MTMC_Tracking_2026_processing_baseline` is the `/path/to/output/`.
 
-You update to change it to your own path in each config file.
+You update to change it to your own path in each config file in `configs` folder.
 
 ```shell
 configs
@@ -102,7 +113,7 @@ configs
 │   └── warehouse_027.yaml
 ```
 
-#### b. Run the code
+### b. Run the code
 
 Run the following commands in the terminal:
 
@@ -113,7 +124,7 @@ bash run_pipline.sh
 After running all command above, the output files will be in the folder 
 
 ```shell
-<output_folder>/mots_multi/track1.txt
+/path/to/output/mots_multi/track1.txt
 ```
 
 ---

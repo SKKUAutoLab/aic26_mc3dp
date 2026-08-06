@@ -1,0 +1,50 @@
+# box_refinement — Python dependencies
+#
+# Pinned to the exact versions the refinement was validated on. The project's own pyproject.toml
+# declares no dependencies, so this file is self-contained: it is everything needed to run the two
+# refine_scene* entry points on a fresh machine, and nothing else.
+#
+#   conda create -n refinement python=3.12 -y && conda activate refinement
+#   pip install -r src/matching/core/box_refinement/requirements.txt
+#
+# TORCH IS A CUDA BUILD and does not come from plain PyPI. Install it first, matching the machine's
+# driver (this was validated on CUDA 13.0, 2x RTX A6000):
+#
+#   pip install torch==2.12.0 torchvision==0.27.0 --index-url https://download.pytorch.org/whl/cu130
+#
+# then the rest of this file. Check `nvidia-smi` and pick the cu### that matches; the refinement
+# does not care which CUDA it is, only that torch sees the GPU.
+
+# --- DA3 model (src/matching/third_party/depth_anything_3) ---
+torch==2.12.0                 # install from the CUDA index first, see above
+torchvision==0.27.0
+xformers==0.0.35              # NOT optional in practice: DINOv2 falls back to a pure-torch SwiGLU
+                              # without it, which changes the numerics of every depth map.
+einops==0.8.2
+huggingface-hub==1.19.0       # pulls the 6.3 GB checkpoint on first run, then caches it
+safetensors==0.8.0
+omegaconf==2.3.1
+addict==2.4.0
+tqdm==4.68.2
+
+# DA3's utils/export/__init__.py imports the glb/colmap/gaussian-splat writers eagerly, so these are
+# needed at import time even though the refinement only ever exports npz.
+trimesh==4.12.2
+pycolmap==4.0.4
+plyfile==1.1.3
+imageio==2.37.3
+matplotlib==3.11.0
+evo==1.36.5                   # utils/pose_align.py (Umeyama alignment)
+
+# --- the refinement itself ---
+numpy==2.5.0
+opencv-python==4.11.0.86      # video decoding, rotated-rect IoU, the zone masks
+open3d==0.19.0                # point clouds
+scikit-learn==1.9.0           # scene 27: HDBSCAN / GaussianMixture alternatives to mean-shift
+pillow==12.2.0
+h5py==3.16.0                  # only for reading GT depth (train/val); harmless on test
+
+# Deliberately NOT here, although DA3 upstream lists them: fastapi, uvicorn, typer, gradio,
+# moviepy, pre-commit. They belong to the web app / benchmarks / CLI, all of which are stripped out
+# of the vendored copy. `ijson` is also absent: it is imported lazily and only for ground-truth
+# depth, which the test-split refinement never touches.

@@ -1,0 +1,23 @@
+# filter_object_noise — Python dependencies
+#
+# Pinned to the versions this was validated on. Everything the filter needs beyond the project's own
+# code: the ViTPose adapter and the zone polygons already live in this repository, and the pose
+# WEIGHTS are not a dependency -- they are passed in with --pose-model.
+#
+#   conda create -n refinement python=3.12 -y && conda activate refinement
+#   pip install -r src/matching/core/filter_object_noise/requirements.txt
+#
+# TORCH IS A CUDA BUILD and does not come from plain PyPI. Install it first, matching the machine's
+# driver (validated on CUDA 13.0, RTX A6000):
+#
+#   pip install torch==2.12.0 torchvision==0.27.0 --index-url https://download.pytorch.org/whl/cu130
+
+torch==2.12.0                 # install from the CUDA index first, see above
+torchvision==0.27.0
+transformers==5.12.1          # ViTPose is loaded through AutoProcessor / VitPoseForPoseEstimation
+safetensors==0.8.0            # the weights format
+pillow==12.2.0
+
+numpy==2.5.0
+opencv-python==4.11.0.86      # decoding the 20 camera videos
+shapely==2.1.2                # the zone polygons: point-in-polygon, buffering

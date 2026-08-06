@@ -1,0 +1,41 @@
+{
+  "version": "2.5.0",
+  "flags": {},
+  "shapes": [
+    {
+      "kie_linking": [],
+      "label": "Camera_0000",
+      "score": null,
+      "points": [
+        [
+          839.0,
+          422.0
+        ],
+        [
+          734.5794392523364,
+          724.1121495327103
+        ],
+        [
+          811.6822429906542,
+          806.3551401869158
+        ],
+        [
+          1117.0,
+          700.0
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "polygon",
+      "flags": {},
+      "attributes": {}
+    }
+  ],
+  "imagePath": "Camera_0000.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "checked": false,
+  "description": "Auto-generated camera FOV polygons in original map.jpg pixel coordinates."
+}

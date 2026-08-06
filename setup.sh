@@ -53,6 +53,7 @@ pip install plyfile==1.1.3  # PLY (Polygon File Format) reader and writer
 pip install addict==2.4.0  # A dictionary whose items can be set using both attribute and item syntax
 pip install evo==1.36.5  # Evaluation of odometry and SLAM (Umeyama alignment)
 pip install scikit-learn==1.9.0  # Machine learning library (HDBSCAN / GaussianMixture clustering)
+pip install moviepy==2.2.1  # Video editing with Python
 
 # Run line by line
 pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu118

@@ -1,0 +1,48 @@
+{
+  "version": "2.5.0",
+  "flags": {},
+  "shapes": [
+    {
+      "kie_linking": [],
+      "label": "Camera_0002",
+      "score": null,
+      "points": [
+        [
+          1158.108108108108,
+          346.30630630630634
+        ],
+        [
+          975.9653465346535,
+          712.3762376237623
+        ],
+        [
+          1055.2845528455284,
+          817.2357723577235
+        ],
+        [
+          1182.9268292682925,
+          795.7723577235772
+        ],
+        [
+          1180.0,
+          360.0
+        ],
+        [
+          1174.0,
+          351.0
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "polygon",
+      "flags": {},
+      "attributes": {}
+    }
+  ],
+  "imagePath": "Camera_0002.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "description": ""
+}

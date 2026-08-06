@@ -1,0 +1,25 @@
+# Override default values in 'scripts/default_config.py'
+data:
+  sources: ['market_aicity']
+  targets: ['market_aicity']
+  height: 384
+  width: 128
+  norm_mean: [0.4318, 0.4142, 0.4082]
+  norm_std: [0.2152, 0.2044, 0.2040]
+
+model:
+  load_weights: "<path_to_weights>"
+  pretrained: False
+  kpr:
+    backbone: imagenet_swin_base_patch4_window7_224
+    keypoints:
+      prompt_masks: keypoints_gaussian
+      prompt_preprocess: cck6
+    masks:
+      dir: "pifpaf_maskrcnn_filtering"
+      preprocess: "five_v"
+  transreid:
+    cam_num: 6
+
+test:
+  evaluate: True

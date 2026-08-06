@@ -1,0 +1,90 @@
+{
+  "version": "3.3.3",
+  "flags": {},
+  "shapes": [
+    {
+      "kie_linking": [],
+      "label": "NONE",
+      "score": null,
+      "points": [
+        [
+          526.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          859.0
+        ],
+        [
+          574.2857142857142,
+          186.42857142857142
+        ],
+        [
+          1383.170731707317,
+          203.41463414634146
+        ],
+        [
+          1644.0,
+          0.0
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "polygon",
+      "flags": {},
+      "attributes": {}
+    },
+    {
+      "label": "NONE",
+      "score": null,
+      "points": [
+        [
+          1659.0,
+          0.0
+        ],
+        [
+          1539.2682926829268,
+          446.0975609756097
+        ],
+        [
+          1717.3170731707316,
+          708.2926829268292
+        ],
+        [
+          1756.341463414634,
+          849.7560975609755
+        ],
+        [
+          1595.0,
+          1079.0
+        ],
+        [
+          1919,
+          1079
+        ],
+        [
+          1919,
+          0
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "polygon",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "Camera_0006.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920,
+  "checked": false,
+  "description": ""
+}

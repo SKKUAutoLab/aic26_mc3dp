@@ -1,0 +1,85 @@
+{
+  "method": "AnyCalib",
+  "model_id": "anycalib_gen",
+  "scene": "Warehouse_026",
+  "aggregation": "median over 31 frames/camera",
+  "note": "intrinsics in original image pixels (principal-point origin = top-left of top-left pixel); radial4 = Brown-Conrady x_d = x*(1+k1 r^2+k2 r^4+k3 r^6+k4 r^8)",
+  "cameras": {
+    "Camera_0000": {
+      "pinhole": {
+        "fx": 1019.7673,
+        "fy": 1030.3362,
+        "cx": 962.7469,
+        "cy": 539.6219
+      },
+      "radial4": {
+        "dist_model": "brown_conrady",
+        "fx": 999.6076,
+        "fy": 1014.3702,
+        "cx": 962.7361,
+        "cy": 539.6233,
+        "k1": 0.081452,
+        "k2": -0.139415,
+        "k3": 0.162352,
+        "k4": -0.085224
+      }
+    },
+    "Camera_0001": {
+      "pinhole": {
+        "fx": 928.2988,
+        "fy": 934.5538,
+        "cx": 961.1638,
+        "cy": 539.3985
+      },
+      "radial4": {
+        "dist_model": "brown_conrady",
+        "fx": 921.9698,
+        "fy": 930.7552,
+        "cx": 961.1508,
+        "cy": 539.4051,
+        "k1": -0.021812,
+        "k2": 0.110427,
+        "k3": -0.088281,
+        "k4": 0.020835
+      }
+    },
+    "Camera_0002": {
+      "pinhole": {
+        "fx": 947.4458,
+        "fy": 953.7274,
+        "cx": 961.7574,
+        "cy": 540.0945
+      },
+      "radial4": {
+        "dist_model": "brown_conrady",
+        "fx": 942.9266,
+        "fy": 951.7155,
+        "cx": 961.7535,
+        "cy": 540.0932,
+        "k1": -0.024038,
+        "k2": 0.096973,
+        "k3": -0.0731,
+        "k4": 0.006331
+      }
+    },
+    "Camera_0003": {
+      "pinhole": {
+        "fx": 874.6052,
+        "fy": 878.519,
+        "cx": 961.0972,
+        "cy": 540.1757
+      },
+      "radial4": {
+        "dist_model": "brown_conrady",
+        "fx": 853.0402,
+        "fy": 860.822,
+        "cx": 961.047,
+        "cy": 540.1746,
+        "k1": 0.098379,
+        "k2": -0.163583,
+        "k3": 0.148118,
+        "k4": -0.044663
+      }
+    }
+  }
+}
