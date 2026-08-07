@@ -1,8 +1,56 @@
-# Syn2RealTrack: Bridging the Gap Between Synthetic and Real-World Datasets for Online Multi-View Multi-Target Tracking
+<h1 align='center'>
+    Syn2RealTrack: Bridging the Gap Between Synthetic and Real-World Datasets<br>
+    for Online Multi-View Multi-Target Tracking
+</h1>
 
-### Team SKKU-AL-T1 - ID 34
+<div align='center'>
+    <a href="https://scholar.google.com/citations?user=crRQGUAAAAAJ&hl">
+      Duong Nguyen-Ngoc Tran</a> &emsp;
+    <a href="https://scholar.google.com/citations?user=pCTUkWwAAAAJ">
+      Ngoc Doan-Minh Huynh</a> &emsp;
+    <a href="https://scholar.google.com/citations?user=Cvf5w60AAAAJ&hl">
+      Cu Quoc Le</a> &emsp;
+    <a href="https://scholar.google.com/citations?user=YpOO60MAAAAJ">
+      Hoang Khang Nguyen</a> &emsp;
+</div>
 
-Solution for 2026 AI City Challenge Track 1: Multi-Camera 3D Perception (Sim2Real)
+<div align='center'>
+    Long Hoang Pham &emsp;
+    Quoc Pham-Nam Ho &emsp;
+    Huy-Hung Nguyen &emsp;
+</div>
+
+<div align='center'>
+    Hyung-Min Jeon &emsp;
+    Chi Dai Tran &emsp;
+    Son Hong Phan
+</div>
+
+<div align='center'>
+    Duong Khac Vu &emsp;
+    Trinh Le Ba Khanh &emsp;
+    <a href="https://scholar.google.com/citations?user=9z0SfKoAAAAJ">
+        Jae Wook Jeon</a>
+</div>
+
+<!-- affiliation -->
+<div align='center'>
+    <br>
+    Team SKKU-AL-T1, ID 34
+    <br>
+    <a href="https://micro.skku.ac.kr/micro/index.do">Automation Lab</a>
+    <p>Sungkyunkwan University</p>
+</div>
+
+<div align='center'>
+    <b>Contacts:</b> <a href="mailto:duongtran@skku.edu">duongtran@skku.edu</a> , <a href="mailto:jwjeon@skku.edu">jwjeon@skku.edu</a>
+</div>
+
+## NEWS
+
+- [2026.08.05] 💻 Our code is released!
+- [2026.08.02] 📄 Our paper is accepted at ECCVW.
+- [2026.07.24] 📄 Our paper is under review.
 
 ---
 ## I. Dataset preparation
@@ -130,10 +178,13 @@ After running all command above, the output files will be in the folder
 ---
 ## IV. Citation
 
-```
-Updating soon.
-
-Accepted in AI City Challenge Workshop in ECCV 2026
+```bibtex
+@INPROCEEDINGS{Tran2026Syn2RealTrack,
+    author    = {Duong Nguyen-Ngoc Tran, Ngoc Doan-Minh Huynh, Cu Quoc Le, Hoang-Khang Nguyen, Long Hoang Pham, Huy-Hung Nguyen, Quoc Pham-Nam Ho, Trinh Le Ba Khanh, Chi Dai Tran, Duong Khac Vu, Son Hong Phan, Hyung-Min Jeon, Jae Wook Jeon},
+    title     = {Syn2RealTrack: Bridging the Gap Between Synthetic and Real World Dataset for Online Multi-View Multi-Target Tracking},
+    booktitle = {European Conference on Computer Vision Workshops (ECCVW)},
+    year      = {2026},
+}
 ```
 
 ---
