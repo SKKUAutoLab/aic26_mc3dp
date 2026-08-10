@@ -36,7 +36,7 @@
 <!-- affiliation -->
 <div align='center'>
     <br>
-    Team SKKU-AL-T1, ID 34
+    Solution for Track 01, Team SKKU-AL-T1, ID 34
     <br>
     <a href="https://micro.skku.ac.kr/micro/index.do">Automation Lab</a>
     <p>Sungkyunkwan University</p>
