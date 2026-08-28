@@ -183,7 +183,7 @@ mtmc:
   # Capped ReID gallery length per track.
   distance_to_polygon_thresh: 1.0
   # m, max distance to consider a track outside the zone (for zone-based filtering).
-  interpolating_missing_frames_max_gap: 60
+  interpolating_missing_frames_max_gap: 0
   # Maximum number of frames to interpolate for a temporarily lost track.
   projection_type:
     skeleton: [0]
