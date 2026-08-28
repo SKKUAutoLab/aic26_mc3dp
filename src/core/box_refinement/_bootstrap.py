@@ -1,4 +1,12 @@
+"""Make the vendored DA3 importable without touching anything outside this package.
 
+`third_party/depth_anything_3` uses absolute self-imports (`from depth_anything_3.cfg import ...`),
+so it has to sit on `sys.path` as a top-level package. The project registers its other vendored
+libraries (botsort, ultralytics, ...) in `pyproject.toml`, but this package deliberately does not
+edit any existing project file, so it puts `third_party` on the path itself.
+
+Import this module before anything that reaches for `depth_anything_3`.
+"""
 import os
 import sys
 

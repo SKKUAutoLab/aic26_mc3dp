@@ -1,4 +1,14 @@
+"""Warehouse_025 (synthetic): the scene-specific half of the refinement.
 
+Everything here is driven by the SUBMISSION as the anchor. Vehicles (NovaCarter, Transporter) are
+re-fitted every frame against the BEV density-excess of the cloud at a fixed class size; people
+(Person, Fourier, Agility) follow the submission and only fall back on the cloud when a frame jumps.
+The per-frame loop, the DA3 cloud and the online smoothing that wrap all of this live in
+``engine.orchestrator`` and are shared with the real-world scene.
+
+The fits themselves are in ``synthetic_fit`` (imported below under its original name so the call
+sites read exactly as they did when these numbers were validated).
+"""
 from __future__ import annotations
 
 import math
@@ -442,3 +452,5 @@ def _agi_step(stt, f, sub, p):
             stt["prev"] = out
     stt["prev_sub"] = sub; stt["last_f"] = f
     return out if out is not None else sub
+
+

@@ -1,4 +1,10 @@
+"""Read GT 3D object annotations for a single frame from ``ground_truth.json``.
 
+The file is large (hundreds of MB) so we stream it with ``ijson`` and stop at the
+requested frame instead of loading the whole dict. Each object becomes an
+oriented 3D bounding box (8 world-space corners) that the browser viewer overlays
+on the fused point cloud (both are in the same world frame, meters).
+"""
 from __future__ import annotations
 
 import json

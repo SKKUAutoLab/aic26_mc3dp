@@ -1,4 +1,16 @@
+"""Calibration + point-cloud helpers for the 3D box refinement.
 
+These were previously spread over two standalone scripts (``tools/run.py``,
+``tools/validate_da3_fusion.py``) that the package reached through a ``sys.path`` hack. They are
+gathered here so ``box_refinement`` is a plain importable package with no path manipulation.
+
+Metric invariants this module encodes (the whole refinement rests on them):
+
+* ``calibration.json`` -> ``sensors[]`` with ``type == "camera"``; ``intrinsicMatrix`` is 3x3 at
+  full resolution and ``extrinsicMatrix`` is 3x4 **world-to-camera, in meters**.
+* Camera centre in world = ``inv(E_4x4)[:3, 3]``; optical axis = ``inv(E_4x4)[:3, 2]``.
+* Back-projection: ``p_cam = depth * inv(K) @ [u, v, 1]`` then ``p_world = inv(E_w2c) @ [p_cam, 1]``.
+"""
 from __future__ import annotations
 
 import json

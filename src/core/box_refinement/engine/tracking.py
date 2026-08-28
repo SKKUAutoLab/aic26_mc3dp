@@ -1,4 +1,18 @@
+"""OC-SORT-inspired per-track stabiliser (IoU-only, keeps the submission object_id).
 
+The submission already gives the track id, so we do NOT re-associate. Per object_id we run a
+constant-velocity (alpha-beta) filter on the BEV centre and use BEV-IoU between each frame's
+refined box and the filter's PREDICTION as a robustness gate:
+
+  * IoU >= iou_thresh  -> accept the detection, smooth it in (reduces jitter).
+  * IoU <  iou_thresh  -> the refine JUMPED (wrong cluster) -> coast on the prediction.
+  * long frame gap     -> observation-centric reset: trust the new detection, zero velocity
+                          (OC-SORT's observation-centric recovery, avoids a stale-velocity drift).
+  * N consecutive rejects -> accept the detection anyway (the object genuinely moved/teleported).
+
+Only the x,y position is stabilised (size/yaw kept from the refine). No new frames are invented —
+output is keyed by the frames the object already appears in. numpy-free; reuses ``_bev_iou``.
+"""
 from __future__ import annotations
 
 import math

@@ -1,4 +1,19 @@
+"""Oriented fixed-size box fit for scene-25 NovaCarter / Transporter (SEPARATE from the person-like
+refine in boxrefine; called ONLY from the scene-25 path).
 
+Why these two classes need their own algorithm:
+  * They have a FIXED size, but DA3's depth error floats their points UP off the ground (the nominal
+    z=0 base ends up below the reconstructed floor). So we must RAISE the search ceiling to catch the
+    floated body, find the right footprint there, then drop the box back to z=0 (keep fixed w,l,h).
+  * They are RECTANGULAR, so a wrong yaw drops a lot of IoU. Multiple cameras can produce two crossed
+    point blobs in different directions, so we ROTATE the fixed footprint and keep the orientation
+    that covers the most points, biased toward the previous-refined (continuity) / submission yaw.
+  * The floor is a dense roughly-horizontal point layer → strong noise. We drop a low-z slab first.
+
+The fit never trusts the submission yaw blindly; it searches ±yaw_window around the reference yaw
+(prev-refined if the track has one, else submission) and maximises footprint coverage. Output x,y is
+the coverage-best footprint centre; z is pinned to floor_z; size stays the fixed w,l,h.
+"""
 import numpy as np
 
 

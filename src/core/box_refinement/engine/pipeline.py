@@ -1,4 +1,8 @@
+"""DA3 inference orchestration for a single multi-camera frame.
 
+Reuses the calibration helpers from ``tools/run.py`` and the DA3 ``inference``
+API. Keeps ``align_to_input_ext_scale=True`` (required for metric / world depth).
+"""
 from __future__ import annotations
 
 import json

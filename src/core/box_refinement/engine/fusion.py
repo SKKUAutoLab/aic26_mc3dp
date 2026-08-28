@@ -1,4 +1,21 @@
+"""Fusion of DA3 results into a world point cloud, with several methods.
 
+Backprojection math is identical to ``tools/validate_da3_fusion.py``
+(``p_cam = depth * inv(K) @ [u,v,1]``; ``p_world = inv(E_w2c) @ [p_cam,1]``) — the
+same pinhole backprojection as DA3's official GLB export (``utils/export/glb.py``).
+DA3 has NO multi-view fusion of its own, so the de-ghosting methods below are
+standard external techniques:
+
+  * ``union``       : per-pixel backprojection of all cameras (full points).
+  * ``voxel``       : union + voxel down-sample (merges near-duplicate points).
+  * ``tsdf``        : Open3D ScalableTSDFVolume — volumetric integration into ONE
+                      consistent surface (removes ghosting), also exports a mesh.
+  * ``consistency`` : COLMAP/MVS-style geometric consistency — keep points that
+                      reproject consistently into >= min_views cameras, then merge.
+
+All methods share the official quality filters: adaptive confidence threshold
+(mirrors ``glb.get_conf_thresh``), depth range, optional sky-mask drop.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -431,8 +448,6 @@ def fuse(
     cluster_denoise: bool = False,
     cluster_eps: float = 0.2,
     min_cluster: int = 40,
-    remove_static: str = "",  # path to a static-bg .ply → subtract its voxels (keep dynamic)
-    static_voxel: float = 0.06,
     indoor_crop_margin: float = 0.0,  # crop X/Y inward from indoor/cloud bounds
     indoor_bounds=None,               # [xmin, xmax, ymin, ymax] in world meters
     indoor_crop_percentile: float = 0.5,  # robust cloud edge percentile if no bounds supplied
@@ -482,12 +497,6 @@ def fuse(
     pcd = _postclean(pcd, outlier_removal and method != "tsdf", nb_neighbors, std_ratio,
                      radius_outlier, radius_nb, radius, cluster_denoise, cluster_eps, min_cluster)
 
-    # Optional background subtraction: drop points sitting in the scene's static voxels.
-    n_static_removed = 0
-    if remove_static and os.path.isfile(remove_static) and len(pcd.points) > 0:
-        from . import staticbg
-        pcd, n_static_removed = staticbg.subtract(pcd, remove_static, static_voxel)
-
     plane = _plane_stats(pcd)
     ply_path = os.path.join(pc_dir, "estimated_fused.ply")
     o3d.io.write_point_cloud(ply_path, pcd, write_ascii=False)  # FULL cloud always saved
@@ -504,7 +513,6 @@ def fuse(
         "indoor_crop_margin": float(indoor_crop_margin or 0.0),
         "indoor_crop_percentile": float(indoor_crop_percentile or 0.0),
         "indoor_crop_bounds": indoor_crop_bounds,
-        "n_static_removed": int(n_static_removed),
         "min_depth": min_depth, "max_depth": max_depth,
         "sky_mask_applied": bool(d_data["sky"] is not None),
         "icp_sync": bool(icp_sync), "icp_cameras_aligned": int(n_icp_aligned),

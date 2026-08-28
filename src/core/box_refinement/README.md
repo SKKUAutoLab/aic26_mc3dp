@@ -50,7 +50,7 @@ depth it needs is the depth it estimates.
 ### 1. Synthetic Scene (Warehouse_025)
 
 ```bash
-python -m src.core.box_refinement.refine_scene25 \
+python -m matching.core.box_refinement.refine_scene25 \
   --input   /path/to/mots_multi/Warehouse_025.txt \
   --dataset /path/to/MTMC_Tracking_2026 \
   --output  /path/to/output \
@@ -68,7 +68,7 @@ Writes the refined submission to:
 ### 2. Real-World Scene (Warehouse_027)
 
 ```bash
-python -m src.core.box_refinement.refine_scene27 \
+python -m matching.core.box_refinement.refine_scene27 \
   --input   /path/to/mots_multi/Warehouse_027.txt \
   --dataset /path/to/MTMC_Tracking_2026 \
   --output  /path/to/output \
@@ -104,7 +104,6 @@ Inferred from the scene, not passed:
 |---|---|
 | Tuned parameters | `profiles/Warehouse_XXX.json` |
 | Zone polygons (scene 27) | `zones/Warehouse_027/zone_new/` |
-| Depth-background model | `assets/bg/Warehouse_XXX/` |
 | Output directory | `--output`, default `output/box_refinement/<scene>/` |
 
 ## Output
@@ -134,7 +133,7 @@ The CLI owns its own frame loop. A pipeline that already iterates frames should 
 and call `BoxRefiner`, which refines exactly one frame per call:
 
 ```python
-from core.box_refinement import BoxRefiner
+from matching.core.box_refinement import BoxRefiner
 
 refiner = BoxRefiner(
     submission="/path/to/mots_multi/Warehouse_025.txt",   # what the tracking stage wrote
@@ -154,7 +153,7 @@ That is the whole integration. Two arguments decide what to refine; the rest hav
 
 **The submission decides everything.** Its first row names the scene, and the scene fixes the frame
 range (`refiner.start`, `refiner.end` -- Warehouse_025: 0..8999, Warehouse_027: 0..1799) and selects
-the tuned parameters, the zone polygons, the depth-background model and the algorithm branch. The
+the tuned parameters, the zone polygons and the algorithm branch. The
 scene and the range are not passed in: doing so would only be a way to contradict the file.
 
 **Frames must be requested in order.** The refinement is causal -- frame *N* is built from what
@@ -193,7 +192,7 @@ dispatches to the scene's fit, smooths, writes the row, and drops the frame's ar
 for f in frames:                                      # orchestrator.py:423
     DA3(images[f], K, E)  ->  results.npz
       [scene 27]          ->  zone mask
-                          ->  depth-background subtraction  ->  dynamic-only cloud
+                          ->  multi-view fuse  ->  this frame's point cloud
                           ->  delete results.npz
 
     scene 25:  synthetic._scene25_boxes(cloud, ...)   # orchestrator.py:601
@@ -228,6 +227,5 @@ Both the input and the output use the Track 1 plain-text format:
 | `--keep-ply` | Write each frame's cloud to `cloud/` (default) |
 | `--no-keep-ply` | Delete it once the frame is refined |
 | `--start` / `--end` | Frame range, default the range present in `--input` |
-| `--bg` | Override the packaged depth-background model |
 | `--zone-dir` | Override the packaged zone polygons |
 | `--profile` | Override the locked per-scene parameters |

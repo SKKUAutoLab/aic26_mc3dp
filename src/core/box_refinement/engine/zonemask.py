@@ -1,4 +1,16 @@
+"""Apply per-camera 'zone' polygons to a DA3 export → drop depth INSIDE the zones.
 
+Scene 27's calibration (K/E) is imperfect → strong distortion in some image regions
+(e.g. the shelving). The user hand-labels those regions as polygons in
+``{scene}/zone/Camera_XXXX.json`` (LabelMe format, full-image pixel coords). DA3 must
+run on the whole image, so instead we **zero out the depth inside the zone polygons**
+on the result and save it as a sibling export tagged ``_zone``. Fusing that export
+keeps only the depth OUTSIDE the zones → fewer viewpoint-noise points.
+
+``results.npz`` keys: ``image`` (N,H,W,3), ``depth`` (N,H,W), ``conf`` (N,H,W),
+``intrinsics`` (N,3,3), ``extrinsics`` (N,3,4). The depth map (H,W) is the DA3
+processing size, so polygons are scaled from each JSON's imageWidth/Height.
+"""
 from __future__ import annotations
 
 import json

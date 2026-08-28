@@ -1,4 +1,9 @@
+"""Geometry helpers shared by both scenes.
 
+``bev_iou`` used to live inside the mean-shift module, which meant the synthetic scene had to reach
+into the real-world scene to borrow it. It is plain rotated-rectangle geometry with no scene
+knowledge, so it belongs here and the dependency runs one way: scenes -> engine.
+"""
 import cv2
 import numpy as np
 

@@ -1,4 +1,19 @@
+"""Per-track person HEIGHT stabiliser for the Final batch pipeline.
 
+mean-shift already fixes (x,y) and keeps (w,l); this module only stabilises HEIGHT.
+A single-frame refine gives a noisy height because the DA3 cloud ghosts + partial views:
+often only the legs are seen (z_top caps ~1.2 m), sometimes only the head, sometimes the
+person genuinely bends to pick something up. We track each object_id across frames:
+
+  * head visible (z_top reaches up to the head)  -> trust z_top (real top -> floor)
+  * legs only (low z_top + COMPACT footprint)     -> HOLD the learned standing height
+  * bending (low z_top + ELONGATED footprint, sustained) -> follow (allow < 1.6)
+  * glitch (too few points)                       -> HOLD
+
+H_stand (the standing height memory) is learned by an EWMA with a decaying-then-floored
+gain, ONLY from head-visible standing frames (both directions, so init 1.7 can settle to a
+true 1.62). See the design discussion. Pure-python + numpy-free so it is trivial to unit test.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass

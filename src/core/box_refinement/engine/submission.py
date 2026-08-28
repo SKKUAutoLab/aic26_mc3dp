@@ -1,4 +1,19 @@
+"""Read AICity Track-1 submission files and turn them into 3D boxes for the viewer.
 
+Submission text format (one object per line, space separated)::
+
+    <scene_id> <class_id> <object_id> <frame_id> <x> <y> <z> <width> <length> <height> <yaw>
+
+* ``x y z``         : box center in world meters (z is the box *center* height).
+* ``width length height`` : box extents along world x / y / z (meters).
+* ``yaw``           : heading about the world z axis (radians).
+
+A "scene" is grouped purely by the number embedded in the file name, so e.g.
+``Warehouse_027.txt`` and any other file whose name contains ``27`` are all
+served under scene ``27`` as separate *versions*. Each box reuses the exact
+corner / edge convention of the GT boxes (``gt._box_corners`` / ``gt.BOX_EDGES``)
+so submission and GT overlays line up in the same world frame.
+"""
 from __future__ import annotations
 
 import os

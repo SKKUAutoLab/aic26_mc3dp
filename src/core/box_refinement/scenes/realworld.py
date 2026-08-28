@@ -1,4 +1,19 @@
+"""Refine submission 3D person boxes against the fused DA3 point cloud.
 
+Each submission box is a good prior, so refinement is SEEDED at the box center.
+The DA3 cloud ghosts (a person appears as several offset, partial duplicates) — one
+ghost is usually more complete. We project the box ROI to the ground plane (BEV) so
+that head/legs (which can split vertically) collapse onto the same (x,y) blob, then
+lock onto the densest mode (the most complete ghost) and gate to a person footprint.
+
+Three parallel methods (same I/O, the UI shows each in its own colour):
+  * ``meanshift`` — seeded Gaussian mean-shift in BEV → densest mode near the box.
+  * ``hdbscan``   — HDBSCAN in BEV → the cluster nearest the box seed.
+  * ``gmm``       — Gaussian mixture in BEV → the component nearest the box seed.
+
+Position (x,y) and height are refined from the cloud; width/length are kept from the
+submission prior by default (ghosts inflate horizontal extent). z is floor-anchored.
+"""
 from __future__ import annotations
 
 import os
@@ -238,7 +253,6 @@ def refine(*, export_dir: str, root: str, scene: str, frame_id: int,
            min_cluster_size: int = 20, n_components: int = 2,
            class_ids=None, exclude_class_ids=None, exclude_object_ids=None,
            class_sizes=None, estimate_yaw: bool = False,
-           remove_static: str = "", static_voxel: float = 0.06,
            cloud_path: str = "", dedup_iou: float = 0.0, min_fit: int = 200,
            skip_refine_object_ids=None, max_roi: int = 4000,
            prev_boxes=None, prev_iou_thresh: float = 0.5, prev_local_margin: float = 0.6,
@@ -249,14 +263,6 @@ def refine(*, export_dir: str, root: str, scene: str, frame_id: int,
     if method not in METHODS:
         raise ValueError(f"method must be one of {METHODS}")
     P = cloud_pts if cloud_pts is not None else _load_cloud(export_dir, cloud_path)
-    if remove_static and os.path.isfile(remove_static):     # drop static-bg points before cluster
-        from .static_point import _voxel_keys
-        sp = np.asarray(o3d.io.read_point_cloud(remove_static).points)
-        if len(sp) and len(P):
-            sk = np.unique(_voxel_keys(sp, static_voxel))
-            kk = _voxel_keys(P, static_voxel)
-            loc = np.clip(np.searchsorted(sk, kk), 0, len(sk) - 1)
-            P = P[sk[loc] != kk]
     sub_path = submission.find_path_for_scene(root, scene)
     if not sub_path:
         raise FileNotFoundError(f"no submission file matching scene {scene}")
@@ -283,7 +289,7 @@ def refine(*, export_dir: str, root: str, scene: str, frame_id: int,
 
     # previous-frame refined position per track (class:object), threaded from the Final batch — used
     # as a TEMPORAL ANCHOR so a track stays on its OWN cluster instead of being stolen by a denser
-    # neighbour when depth-bg decimates its points (see Pass 1 multi_candidate anchoring).
+    # neighbour when occlusion thins out its points (see Pass 1 multi_candidate anchoring).
     _dpos = {str(k): v for k, v in (prev_boxes or {}).items()}
 
     def _prevxy(box):

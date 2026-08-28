@@ -1,4 +1,23 @@
-"""Refine using the DA3 point cloud"""
+"""Refine a Track 1 submission against the DA3 point cloud, one frame at a time.
+
+    python -m matching.core.box_refinement.refine_scene25 --input <submission>.txt --dataset <root>
+
+For every frame in the submission:
+
+    DA3 inference -> results.npz            (~67 MB)
+      [scene 27]  -> zone mask
+                  -> multi-view fuse  -> this frame's point cloud
+                  -> drop results.npz
+                  -> refine this frame's boxes against the full-density cloud
+                  -> write this frame's rows, flush, then keep or drop the cloud
+
+The causal state (previous refined pose, submission history, velocity windows) carries across
+frames, so the loop is strictly sequential -- no chunks, no warmup. One GPU per scene.
+
+The submission decides everything about WHAT to refine: its first row names the scene, and the
+scene fixes the frame range and selects the tuned parameters and the zone polygons. The tuned
+parameters are deliberately not flags -- these are the numbers the results were validated with.
+"""
 import argparse
 import json
 import os
@@ -21,10 +40,6 @@ PROFILE_DIR = os.path.join(PKG, "profiles")
 # zone folders and the project's regions.zone_* configs -- keeping them here stops the three from
 # being confused for one another.
 ZONE_DIR = os.path.join(PKG, "zones")
-# ...and so do the depth-background models. They cost a DA3 pass over ~180 frames to rebuild, and the
-# refinement cannot run without one, so shipping them is what makes this package work on a fresh
-# machine straight out of the repo.
-BG_DIR = os.path.join(PKG, "assets", "bg")
 
 # Voxel size for a KEPT .ply. It shrinks the file that is written; the refine always runs on the
 # full-density cloud, so results never depend on it. Not a CLI flag -- keeping the clouds at all is
@@ -51,39 +66,13 @@ def scene_of(path):
         f"  Refinement runs after the tracking stage: give it the submission that stage wrote.")
 
 
-def resolve_bg(cfg, scene, explicit):
-    """Absolute path of the depth-background model. Both scenes ship one; we never silently skip it."""
-    if explicit:
-        if not os.path.isfile(explicit):
-            raise SystemExit(f"--bg not found: {explicit}")
-        return explicit
-    if not cfg.get("use_depth_bg"):
-        return ""
-    from .engine import pipeline
-    tag = (os.path.basename(cfg["bg_name"]) if cfg.get("bg_name") else
-           f"bg_res{cfg['process_res']}"
-           f"{pipeline.zone_suffix(cfg.get('apply_zone', False), cfg.get('zone_name', ''))}.npz")
-    packaged = os.path.join(BG_DIR, scene, tag)
-    if os.path.isfile(packaged):
-        return packaged
-    for base in CACHE_ROOTS:
-        candidate = os.path.join(base, "final", scene, tag)
-        if os.path.isfile(candidate):
-            return candidate
-    raise SystemExit(
-        f"depth-background model '{tag}' is required for {scene} but was not found at {packaged}.\n"
-        f"  Pass one with --bg <path>. It is a one-off scene prior (DA3 over ~180 sampled frames,\n"
-        f"  giving a per-camera-pixel background depth). Every fit runs on the DYNAMIC-only cloud,\n"
-        f"  so this file is not optional.")
-
-
 def plan_run(*, submission, dataset, gpu=None, output="", split="test", keep_ply=True,
-             start=None, end=None, profile="", bg="", zone_dir="", expect_scene_id=None,
+             start=None, end=None, profile="", zone_dir="", expect_scene_id=None,
              verbose=True) -> dict:
     """Resolve everything a run needs from just the submission path and the dataset root.
 
-    The scene comes from the submission's first column; the tuned parameters, the zone polygons and
-    the depth-background model come from what is packaged for that scene. Returns the kwargs for
+    The scene comes from the submission's first column; the tuned parameters and the zone polygons
+    come from what is packaged for that scene. Returns the kwargs for
     :func:`orchestrator.iter_final`, so the CLI and :class:`~..refiner.BoxRefiner` build a run the
     same way and cannot drift apart.
     """
@@ -125,7 +114,6 @@ def plan_run(*, submission, dataset, gpu=None, output="", split="test", keep_ply
     start = f_lo if start is None else start
     end = f_hi if end is None else end
     gpu = cfg.get("gpu_id", 0) if gpu is None else gpu
-    bg = resolve_bg(cfg, scene, bg)
     out_path = os.path.join(out_dir, os.path.splitext(os.path.basename(inp))[0] + "_refined.txt")
 
     if verbose:
@@ -134,7 +122,6 @@ def plan_run(*, submission, dataset, gpu=None, output="", split="test", keep_ply
         print(f"frames     : {start}..{end}  (sequential, no chunks, no warmup)")
         print(f"cloud      : DA3 {cfg['model']} @ {cfg['process_res']}, gpu {gpu}, "
               f"zone={cfg.get('zone_name') or 'off'}")
-        print(f"depth-bg   : {bg or 'OFF'}  (margin {cfg.get('bg_margin', 0.3)})")
         print(f"per-frame  : npz + JPEGs deleted · cloud {'KEPT' if keep_ply else 'DELETED'}")
         if keep_ply:
             # Per-frame cloud size swings by two orders of magnitude between scenes (measured: ~5 MB
@@ -159,7 +146,6 @@ def plan_run(*, submission, dataset, gpu=None, output="", split="test", keep_ply
         use_prev_reseed=q("use_prev_reseed", False), prev_iou_thresh=q("prev_iou_thresh", 0.5),
         fix_person_height=q("fix_person_height", False), person_height=q("person_height", 1.75),
         person_w=q("person_w", 0.55), person_l=q("person_l", 0.40),
-        remove_static="", bg_path=bg, bg_margin=q("bg_margin", 0.3),
         use_yaw_smooth=q("use_yaw_smooth", True), yaw_alpha=q("yaw_alpha", 0.4),
         yaw_rate=q("yaw_rate", 0.08), clamp_vmax=q("clamp_vmax", 0.18),
         lowpass_floor=q("lowpass_floor", 0.25), motion_keep_fit=q("motion_keep_fit", 200),
@@ -189,8 +175,6 @@ def main(expect_scene_id=None, prog=None):
                          "next to the input, so the previous stage's directory stays clean.")
     ap.add_argument("--split", default="test")
     ap.add_argument("--gpu", type=int, default=None, help="GPU id (default: the scene profile's)")
-    ap.add_argument("--bg", default="",
-                    help="depth-background .npz. Default: the model packaged at assets/bg/<scene>/.")
     ap.add_argument("--profile", default="", help="override the locked per-scene profile JSON")
     ap.add_argument("--zone-dir", default="",
                     help="directory of zone polygons (Camera_*.json). Default: the set packaged at "
@@ -203,7 +187,7 @@ def main(expect_scene_id=None, prog=None):
 
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--keep-ply", dest="keep_ply", action="store_true",
-                   help="keep each frame's background-subtracted cloud (default)")
+                   help="keep each frame's fused point cloud (default)")
     g.add_argument("--no-keep-ply", dest="keep_ply", action="store_false",
                    help="delete it once the frame is refined; disk then stays flat")
     ap.set_defaults(keep_ply=True)
@@ -211,17 +195,19 @@ def main(expect_scene_id=None, prog=None):
 
     plan = plan_run(submission=a.input, dataset=a.dataset, gpu=a.gpu, output=a.output,
                     split=a.split, keep_ply=a.keep_ply, start=a.start, end=a.end,
-                    profile=a.profile, bg=a.bg, zone_dir=a.zone_dir,
+                    profile=a.profile, zone_dir=a.zone_dir,
                     expect_scene_id=expect_scene_id)
     out_dir, out_path = plan["out_dir"], plan["out_path"]
     res = orchestrator.run_final(**plan["kwargs"])
 
     print(f"\nREFINED -> {out_path}")
     print(f"  {res['n_lines']} lines · {res['n_frames']} frames · {res['n_tracks']} tracks")
-    print(f"  cleanup: {res['n_npz_deleted']} npz, {res['n_dyn_ply_deleted']} dynamic ply deleted")
+    print(f"  cleanup: {res['n_npz_deleted']} npz, {res['n_dyn_ply_deleted']} cloud ply deleted")
     cloud_dir = os.path.join(out_dir, "cloud")
     if os.path.isdir(cloud_dir):
         n = sum(os.path.getsize(os.path.join(cloud_dir, f)) for f in os.listdir(cloud_dir))
         print(f"  clouds : {len(os.listdir(cloud_dir))} files, {n / 1e9:.2f} GB -> {cloud_dir}")
     print(f"  time: {res['seconds_total']}s total · {res['seconds_per_frame']}s/frame "
           f"(DA3 {res['da3_per_frame']}s, refine {res['refine_per_frame']}s)")
+
+

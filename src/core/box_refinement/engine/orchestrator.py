@@ -1,4 +1,12 @@
+"""Final batch pipeline (tab "Final").
 
+For a frame range and ONE config: per frame, REUSE the existing DA3+fuse
+``estimated_fused.ply`` if present (DA3 npz + fuse are deterministic per scene/frame, so
+trying different refine/height configs never re-runs them) else run DA3 -> fuse; refine
+each frame with ONE method. Scene 25 refines every class while NovaCarter/Transporter
+keep fixed size; scenes 26/27 still use their manual/static-object plans. The result is
+a standard submission ``scene<id>_<start>_<end>_<timestamp>.txt``.
+"""
 from __future__ import annotations
 
 import math
@@ -9,14 +17,12 @@ import time
 import numpy as np
 import open3d as o3d
 
-from . import (dataset, depthbg, fusion, heighttrack, oriented_fit, pipeline, staticbg,
+from . import (dataset, fusion, heighttrack, oriented_fit, pipeline,
                submission, tracking)
 from ..scenes import realworld as boxrefine        # scene 27: annealed mean-shift
 from ..scenes import synthetic                     # scene 25: submission-anchored fits
 from ..scenes.synthetic import (SCENE25_FIXED_CLASS_SIZES, SCENE25_FORKLIFT_SIZE,
                                 SCENE25_ORIENTED_PARAMS, SCENE25_PARAMS, SCENE25_WALK_LENGTH)
-
-from tqdm import tqdm
 
 STATIC_CLASSES = (2, 3)
 # scene 25 — FIXED w,l,h per REFINED class (Forklift=1 is manual/stationary, sized below).
@@ -306,7 +312,7 @@ def run_final(**kwargs) -> dict:
 def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame_step, warmup=0,
               model_name, process_res, ref_view, use_ray_pose, gpu_id, apply_zone,
               fuse_kwargs, refine_method, person_params, static_sizes, static_poses,
-              ht_params, timestamp, remove_static="", bg_path="", bg_margin=0.3,
+              ht_params, timestamp,
               zone_name="zone", zone_dir="", use_height_track=True, use_tracking=False,
               track_params=None,
               use_prev_reseed=False, prev_iou_thresh=0.5,
@@ -335,7 +341,6 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
     scene_id = submission._scene_num_from_name(scene) or 0
     model_san = pipeline.sanitize_model_name(model_name)
     floor_z = float((person_params or {}).get("floor_z", 0.0))
-    static_voxel = staticbg.static_voxel_of(remove_static) if remove_static else 0.06
     _cfg = _final_cfg(scene, static_sizes)   # per-scene manual vs auto-refined plan
     # LOCKED per-scene online-smoothing profile (in code) overrides the run defaults → exact reproduce,
     # isolated per scene. A scene without an "algo" block just uses the passed/global defaults.
@@ -403,10 +408,7 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
     h_tf: dict = {}
     frame_persons: dict = {}
     frame_statics: dict = {}
-    bg_model = depthbg.load_bg(bg_path) if bg_path and os.path.isfile(bg_path) else None
     fuse_kwargs = dict(fuse_kwargs or {})
-    crop_margin = float(fuse_kwargs.get("indoor_crop_margin") or 0.0)
-    crop_pct = float(fuse_kwargs.get("indoor_crop_percentile") or 0.5)
     # Rows are flushed as each frame finishes, so a crash late in a 60-hour run does not throw away
     # everything before it. Only possible when nothing needs the WHOLE run to decide a row:
     # OC-SORT (pos_tf) and height-track (h_tf) are both fitted after the frame loop, so with either
@@ -429,7 +431,7 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
 
     reused, refine_failed, n_full_ply_deleted, t_total, t_da3, t_refine = 0, 0, 0, time.perf_counter(), 0.0, 0.0
     n_npz_deleted = n_dyn_ply_deleted = 0                      # per-frame cleanup
-    for k, f in enumerate(tqdm(frames)):
+    for k, f in enumerate(frames):
         if k > 0:                                        # running avg s/frame + ETA
             avg = (time.perf_counter() - t_total) / k
             msg = (f"frame {f} ({k + 1}/{len(frames)}) · {avg:.2f}s/frame · "
@@ -441,9 +443,8 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
                                apply_zone, zone_name)
         npz = os.path.join(export, "exports", "npz", "results.npz")
         ply = os.path.join(export, "pointcloud", "estimated_fused.ply")
-        cloud_path, rstatic = "", remove_static
-        # bg mode needs only the npz (no fuse); voxel-subtract mode needs the fused ply
-        need = (not os.path.isfile(npz)) if bg_model else (not os.path.isfile(ply))
+        # Every fit runs on the frame's fused cloud, so the frame is ready once that ply exists.
+        need = not os.path.isfile(ply)
         if not need:
             reused += 1
         else:
@@ -469,36 +470,13 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
                           else res["export_dir"])
                 npz = os.path.join(export, "exports", "npz", "results.npz")
                 ply = os.path.join(export, "pointcloud", "estimated_fused.ply")
-            if not bg_model and not os.path.isfile(ply):
+            if not os.path.isfile(ply):
                 fusion.fuse(export_dir=export, **fuse_kwargs)
             t_da3 += time.perf_counter() - t0
 
-        if bg_model:                                     # depth-bg: dynamic-only cloud (no fuse)
-            crop_tag = (f"_crop{int(round(crop_margin * 100))}_e{int(round(crop_pct * 10))}"
-                        if crop_margin > 0 else "")
-            dynp = os.path.join(export, "pointcloud",
-                                f"dynamic_bg_m{int(round(bg_margin * 100))}{crop_tag}.ply")
-            # REUSE the dynamic cloud across runs (same margin) unless the BG was rebuilt after it
-            stale = (not os.path.isfile(dynp)) or (bg_path and os.path.isfile(bg_path)
-                     and os.path.getmtime(bg_path) > os.path.getmtime(dynp))
-            if stale:
-                pts, cols, _st = depthbg.dynamic_points(
-                    export, bg_model, margin=bg_margin,
-                    indoor_crop_margin=crop_margin,
-                    indoor_crop_percentile=crop_pct)
-                os.makedirs(os.path.dirname(dynp), exist_ok=True)
-                pc = o3d.geometry.PointCloud()
-                pc.points = o3d.utility.Vector3dVector(pts)
-                if len(cols):
-                    pc.colors = o3d.utility.Vector3dVector(cols)
-                o3d.io.write_point_cloud(dynp, pc)
-            cloud_path, rstatic = dynp, ""               # static already gone via depth-bg
-            if _scene25(scene) and os.path.isfile(ply):
-                try:
-                    os.remove(ply)
-                    n_full_ply_deleted += 1
-                except OSError:
-                    pass
+        # The frame's cloud IS the fused cloud. Naming it here keeps ONE cleanup path below and
+        # gives the scene-25 fit its shared point array (P_shared), which is loaded from this path.
+        cloud_path = ply
 
         tr = time.perf_counter()
         # ONLINE motion model: predict each track's position THIS frame = prev + (prev − prev2).
@@ -619,7 +597,7 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
                     exclude_class_ids=list(_cfg["exclude_classes"]) + _oriented,   # refine SKIPS oriented
                     exclude_object_ids=_cfg["exclude_objs"],
                     class_sizes=_cfg["person_class_sizes"], estimate_yaw=_cfg["person_yaw"],
-                    remove_static=rstatic, static_voxel=static_voxel, cloud_path=cloud_path,
+                    cloud_path=cloud_path,
                     prev_boxes=(prev_refined if (use_prev_reseed or _cfg.get("multi_candidate")) else None),
                     prev_iou_thresh=prev_iou_thresh, use_prev_reseed=use_prev_reseed,
                     tight_footprint=_cfg.get("tight_footprint", False),
@@ -835,7 +813,7 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
                 _rmtree(os.path.join(frame_dir, "frames"), cleanup_root)
                 _rmtree(os.path.join(export, "metadata"), cleanup_root)
             if keep_ply:
-                _shrink_ply(cloud_path, ply_voxel)   # keep the dynamic cloud, just lighter on disk
+                _shrink_ply(cloud_path, ply_voxel)   # keep the frame's cloud, just lighter on disk
                 if ply_dir and os.path.isfile(cloud_path):
                     # Lift it out of the deep DA3 export tree into one flat directory, named by
                     # frame -- otherwise the kept clouds are buried six levels down under a

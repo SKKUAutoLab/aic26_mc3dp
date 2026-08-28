@@ -1,4 +1,30 @@
+"""Scene-25 ONLY, SUBMISSION-ANCHORED refine. Fully separate from boxrefine (scene 27 keeps using
+the real-world mean-shift untouched). The submission positions score well on HOTA, so the submission is the
+PRIMARY anchor and the point cloud only corrects it.
 
+HUMAN-shaped (Person/Fourier/Agility) — ``fit_one``: position = the SUBMISSION directly (smooth & accurate;
+a point-fit would add jitter). Per class:
+    * PERSON(0) — ALWAYS FOLLOWs the submission. STANDING (submission barely moving) also re-estimates the
+      yaw from the cloud shoulder-PCA (``fit_human_feet``, tall-column band): scan the feet/body cells and take
+      their PCA stance direction (x,y stay LOCKED to the submission); WALKING → yaw follows the submission.
+    * FOURIER(4) — FOLLOWs the submission unless it JUMPs (submission moves > ``jump_gate`` from the previous
+      refined box in one frame = a glitch, not motion). On a JUMP it RE-LOCATES x,y from the cloud: anchor at
+      the PREVIOUS refined position, BEV density-excess SLIDE the fixed box onto the densest body coverage
+      within ±``jump_search``, GLIDE ≤ ``jump_cap`` from prev. STANDING+jump holds x,y at the anchor with the
+      shoulder-PCA yaw; yaw else = the submission orientation.
+    * AGILITY(5) — ALWAYS FOLLOWs the submission HERE (``fit_one`` returns x,y = submission, NEVER touches the
+      cloud). Its glitch handling is a SEPARATE, submission-only, STATEFUL "hold-coast-return-jump" state
+      machine that lives in ``synthetic`` (``_agi_step``): on a > gate submission step it HOLDs the box at the
+      pre-jump anchor + a robust ≈-zero coast velocity, then RESUMEs via a rate-limited glide on a return-jump /
+      gradual come-back / timeout / reloc-snap. That owner OVERRIDES the Agility x,y after ``fit_one`` runs.
+  Jump-frame position smoothing (Fourier) + the yaw EWMA live downstream in engine.orchestrator.run_final.
+
+NovaCarter/Transporter — ``fit_vehicle``: BEV density-excess ghost-aware FIXED-box scan (seed = submission
+position only; size = fixed; yaw = locked to the submission when moving, else PCA from the cloud).
+
+Boxes come back in the shape realworld.refine emits, so the orchestrator's yaw EWMA (humans-still / scene-27) and the
+collision pass run on top.
+"""
 import numpy as np
 
 from ..engine import gt, submission

@@ -1,4 +1,33 @@
+"""Frame-by-frame API, for driving the refinement from inside another pipeline.
 
+The CLI (`refine_scene25` / `refine_scene27`) owns its own loop and is the simplest way to use this
+package: a submission `.txt` goes in, a refined `.txt` comes out. But a pipeline that already
+iterates frames wants to own the loop itself. It cannot call into `orchestrator.run_final`, which
+takes 53 arguments and carries 21 state dicts across frames.
+
+`BoxRefiner` is that loop turned inside out:
+
+    from matching.core.box_refinement import BoxRefiner
+
+    refiner = BoxRefiner(
+        submission="/path/to/mots_multi/Warehouse_025.txt",   # what the tracking stage wrote
+        dataset="/path/to/MTMC_Tracking_2026",
+        gpu=0,
+    )
+    for frame_id in range(refiner.num_frames):
+        rows = refiner.refine_frame(frame_id)      # 11-column submission rows, refined
+        ...                                        # hand them wherever the pipeline wants
+    refiner.close()
+
+Three arguments in, one call per frame. The scene is read from the submission's first column, and
+everything else — the tuned parameters, the zone polygons — comes from
+what is packaged with this scene. The causal state (previous refined pose, submission history,
+velocity windows) lives inside the object; nothing has to be threaded through by the caller.
+
+Frames must be requested in order, starting at `start`: the refinement is causal, so frame N is
+built from what frames 0..N-1 produced. Asking out of order raises rather than quietly returning a
+box refined against the wrong history.
+"""
 import os
 
 from . import cli
@@ -15,7 +44,7 @@ class BoxRefiner:
         """
         The submission decides everything about *what* to refine. Its first row names the scene,
         and the scene fixes the frame range (Warehouse_025: 0..8999, Warehouse_027: 0..1799) along
-        with the tuned parameters, the zone polygons and the depth-background model. So the scene
+        with the tuned parameters and the zone polygons. So the scene
         and the range are never passed in -- passing them would only be a way to contradict the file.
 
         Args:
