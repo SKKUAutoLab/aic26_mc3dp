@@ -1400,8 +1400,8 @@ def setup_fusion(config, class_labels, list_of_cameras):
 		img_bev_path  = os.path.join(config["regions"]["zone_bev"], f"{camera_name}.jpg")
 		if camera_name in calib_dict:
 			camera_calib_dict      = calib_dict[camera_name]
-			zones_bev[camera_name] = load_zone_bev(
-				zone_bev_path, img_bev_path, camera_name, camera_calib_dict)
+			# zones_bev[camera_name] = load_zone_bev(
+			# 	zone_bev_path, img_bev_path, camera_name, camera_calib_dict)
 			if len(zone_roi) == 0:
 				# Ported verbatim from the five-process path, where it is also
 				# built once and then never read.
@@ -1659,10 +1659,11 @@ def main(args, config):
 
 	trackers_by_camera    = make_all_trackers(config, class_labels, list_of_cameras)
 	track_count_by_camera = {cam: 0 for cam in list_of_cameras}
-	zones_none_by_camera  = {
-		cam: load_zone_camera(os.path.join(config["regions"]["zone_camera"], f"{cam}.json"))
-		for cam in list_of_cameras
-	}
+	zones_none_by_camera  = {}
+	# zones_none_by_camera  = {
+	# 	cam: load_zone_camera(os.path.join(config["regions"]["zone_camera"], f"{cam}.json"))
+	# 	for cam in list_of_cameras
+	# }
 
 	# ---- the out-of-memory store: every stage boundary is a file ----
 	# The two fusion-less modes are debug modes and get a throwaway store root:

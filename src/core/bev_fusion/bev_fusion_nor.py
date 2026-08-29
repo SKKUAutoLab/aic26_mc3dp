@@ -55,7 +55,8 @@ class GlobalTrack:
 		positions = [xy for _, xy in ordered]
 		for i, (frame_id, _) in enumerate(ordered):
 			frame_start = max(0, i - half_window)
-			frame_end   = min(len(positions), i + half_window + 1)
+			# frame_end   = min(len(positions), i + half_window + 1)
+			frame_end   = min(len(positions), i) # only use past positions to avoid future leakage
 			window = positions[frame_start:frame_end]
 			yaw = angle_with_polyfit_degree_2(window, eval_index=i - frame_start, min_speed=min_speed)
 			if yaw is None:
@@ -101,14 +102,13 @@ class BEVFusionTrackerNOR:
 		self.interpolating_missing_frames_max_gap = cfg.get("interpolating_missing_frames_max_gap", 0)
 
 		self.track_cap = None
-		self.track_cap = {23: {0: 70, 1: 7}, 24: {0: 70, 1: 7}, 25: {0: 8, 1: 1, 2: 2, 3: 5, 4: 3, 5: 4}, 26: {0: 7, 1: 2, 2: 1}, 27: {0: 7, 2: 1, 3: 1}}.get(scene_id, {})
 		self.reclaim_ghost_min_age = cfg.get("reclaim_ghost_min_age", self.max_age)
 		self.force_match_track = cfg.get("force_match_track", False)
 		if self.track_cap:
 			unlisted = sorted(set(range(len(self.bev_thresh_by_class))) - set(self.track_cap))
 			if unlisted:
 				pass
-
+		
 		self.tracks   = []  # active + coasting
 		self.retired  = []  # age_missing > max_age, kept for output (adaptive only)
 		self._next_id = collections.defaultdict(lambda: 1)   # per-class object_id counter
@@ -489,13 +489,13 @@ class BEVFusionTrackerNOR:
 		"""Fill ``tr.frames`` from sighting history, interpolating short gaps."""
 		hist   = sorted(tr.history)
 		frames = {f: (x, y) for f, x, y in hist}
-		for k in range(len(hist) - 1):
-			f_0, x_0, y_0 = hist[k]
-			f_1, x_1, y_1 = hist[k + 1]
-			gap = f_1 - f_0
-			if gap <= 1 or (gap - 1) > self.interpolating_missing_frames_max_gap:
-				continue
-			for f in range(f_0 + 1, f_1):
-				a = (f - f_0) / gap
-				frames[f] = (x_0 + a * (x_1 - x_0), y_0 + a * (y_1 - y_0))
+		# for k in range(len(hist) - 1):
+		# 	f_0, x_0, y_0 = hist[k]
+		# 	f_1, x_1, y_1 = hist[k + 1]
+		# 	gap = f_1 - f_0
+		# 	if gap <= 1 or (gap - 1) > self.interpolating_missing_frames_max_gap:
+		# 		continue
+		# 	for f in range(f_0 + 1, f_1):
+		# 		a = (f - f_0) / gap
+		# 		frames[f] = (x_0 + a * (x_1 - x_0), y_0 + a * (y_1 - y_0))
 		tr.frames = frames
