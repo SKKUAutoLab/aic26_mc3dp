@@ -101,13 +101,8 @@ class BEVFusionTrackerNOR:
 		self.make_world_observation_mode = cfg.get("make_world_observation_mode", "max_confidence")
 		self.interpolating_missing_frames_max_gap = cfg.get("interpolating_missing_frames_max_gap", 0)
 
-		self.track_cap = None
 		self.reclaim_ghost_min_age = cfg.get("reclaim_ghost_min_age", self.max_age)
 		self.force_match_track = cfg.get("force_match_track", False)
-		if self.track_cap:
-			unlisted = sorted(set(range(len(self.bev_thresh_by_class))) - set(self.track_cap))
-			if unlisted:
-				pass
 		
 		self.tracks   = []  # active + coasting
 		self.retired  = []  # age_missing > max_age, kept for output (adaptive only)
@@ -127,9 +122,7 @@ class BEVFusionTrackerNOR:
 		return class_id in self.reid_class_ids
 
 	def _cap_for(self, class_id):
-		if not self.track_cap:
-			return None
-		return self.track_cap.get(class_id, 0)
+		return None
 
 	@staticmethod
 	def _spawn_rank(wo):
@@ -351,8 +344,6 @@ class BEVFusionTrackerNOR:
 		# first; in adaptive mode keep the original observation order so object_id
 		# assignment is unchanged.
 		unmatched = [oi for oi in range(len(world_obs)) if oi not in matched_observations]
-		if self.track_cap:
-			unmatched.sort(key=lambda oi: self._spawn_rank(world_obs[oi]), reverse=True)
 
 		for o_index in unmatched:
 			world_observation = world_obs[o_index]
