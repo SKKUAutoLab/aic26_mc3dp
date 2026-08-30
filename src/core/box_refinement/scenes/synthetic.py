@@ -30,12 +30,12 @@ SCENE25_FIXED_CLASS_SIZES = {
     # length (scale[1], local-Y) is ALWAYS along the heading. For Nova/Transp/Agility l is the LONGER
     # edge; for Person/Fourier the WIDTH (shoulders) is longer and travel is along the SHORTER length.
     0: [0.559, 0.402, 1.842],       # Person       (w=shoulders>l; travel along short l) — l kept at 0.402 (safe)
+    1: [1.21380612521306, 2.31336527421999, 2.15494466137264],  # Forklift     (l>w; travel along long l) — class 1 is a forklift
     2: [0.499, 0.784, 0.599],       # NovaCarter   (l>w; travel along long l)
     3: [0.659, 1.431, 0.231],       # Transporter  (l>w; travel along long l)
     4: [0.601, 0.466, 1.643],       # FourierGR1T2 (w=shoulders>l; travel along short l)
     5: [0.542, 0.807, 1.780],       # AgilityDigit (l>w; travel along long l)
 }
-SCENE25_FORKLIFT_SIZE = [1.21380612521306, 2.31336527421999, 2.15494466137264]  # class 1 (manual)
 # DYNAMIC length when WALKING: the GT-10 length MEAN (> the stationary median above) — a moving person's
 # footprint stretches with the stride. Used only while moving; stationary keeps the median fix size.
 # Person + Fourier (human-shaped that stride); AgilityDigit is fine on its fix size (per user).
@@ -452,5 +452,3 @@ def _agi_step(stt, f, sub, p):
             stt["prev"] = out
     stt["prev_sub"] = sub; stt["last_f"] = f
     return out if out is not None else sub
-
-
