@@ -1400,8 +1400,6 @@ def setup_fusion(config, class_labels, list_of_cameras):
 		img_bev_path  = os.path.join(config["regions"]["zone_bev"], f"{camera_name}.jpg")
 		if camera_name in calib_dict:
 			camera_calib_dict      = calib_dict[camera_name]
-			# zones_bev[camera_name] = load_zone_bev(
-			# 	zone_bev_path, img_bev_path, camera_name, camera_calib_dict)
 			if len(zone_roi) == 0:
 				# Ported verbatim from the five-process path, where it is also
 				# built once and then never read.
