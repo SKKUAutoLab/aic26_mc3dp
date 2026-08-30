@@ -129,7 +129,7 @@ def _final_cfg(scene, static_sizes=None):
     if _scene25(scene):
         # SAME algorithm family as scene 27 (multi_candidate continuity + online smoothing), but a
         # TIGHTER refine window (objects sit close to their submission points) and FIXED size per class.
-        # Forklift (class 1 — the only stationary object) is HAND-PLACED like Nova/Trans in scene 27;
+        # Forklift (class 1 — the only stationary object) is like Nova/Trans in scene 27;
         # every other class (0,2,3,4,5) is refined at its fixed size. SELF-CONTAINED branch: it shares
         # NONE of scene 27's config and the scene-27 branch below is untouched.
         cs = {k: list(v) for k, v in SCENE25_FIXED_CLASS_SIZES.items()}   # LOCKED (no UI override)
@@ -381,7 +381,7 @@ def iter_final(*, root, split, scene, output_root, frame_start, frame_end, frame
         person_params["margin"] = float(_algo.get("margin", person_params.get("margin", 0.5)))
         person_params["bandwidth"] = float(_algo.get("bandwidth", person_params.get("bandwidth", 0.4)))
         person_params["min_fit"] = int(_algo.get("min_fit", person_params.get("min_fit", 500)))
-        static_sizes = dict(static_sizes or {})            # give the HAND-PLACED forklift its fixed size
+        static_sizes = dict(static_sizes or {})           
         for _k, _v in _cfg.get("manual_sizes", {}).items():
             static_sizes.setdefault(str(_k), list(_v))
 

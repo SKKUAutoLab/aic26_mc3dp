@@ -36,7 +36,6 @@ SCENE_FRAMES = {25: (0, 8999), 27: (0, 1799)}
 PKG = os.path.dirname(os.path.abspath(__file__))
 # The locked per-scene profiles ship WITH the package: same numbers that produced the validated runs.
 PROFILE_DIR = os.path.join(PKG, "profiles")
-# So do the zone polygons. Scene 27's are a hand-refined set, DIFFERENT from both the dataset's own
 # zone folders and the project's regions.zone_* configs -- keeping them here stops the three from
 # being confused for one another.
 ZONE_DIR = os.path.join(PKG, "zones")
@@ -209,5 +208,3 @@ def main(expect_scene_id=None, prog=None):
         print(f"  clouds : {len(os.listdir(cloud_dir))} files, {n / 1e9:.2f} GB -> {cloud_dir}")
     print(f"  time: {res['seconds_total']}s total · {res['seconds_per_frame']}s/frame "
           f"(DA3 {res['da3_per_frame']}s, refine {res['refine_per_frame']}s)")
-
-
