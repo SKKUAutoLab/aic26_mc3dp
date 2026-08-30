@@ -340,9 +340,6 @@ class BEVFusionTrackerNOR:
 		live_by_class    = collections.Counter(tr.class_id for tr in snapshot)
 		spawned_by_class = collections.Counter()
 
-		# In fixed mode fill scarce slots with the most confident observations
-		# first; in adaptive mode keep the original observation order so object_id
-		# assignment is unchanged.
 		unmatched = [oi for oi in range(len(world_obs)) if oi not in matched_observations]
 
 		for o_index in unmatched:
