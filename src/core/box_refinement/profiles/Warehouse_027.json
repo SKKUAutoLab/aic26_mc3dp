@@ -81,7 +81,7 @@
     },
     "use_prev_reseed": false,
     "prev_iou_thresh": 0.5,
-    "fix_person_height": true,
+    "fix_person_height": false,
     "person_height": 1.75,
     "person_w": 0.55,
     "person_l": 0.4,
