@@ -157,10 +157,6 @@ def _final_cfg(scene, static_sizes=None):
                          # VEHICLES (2,3): yaw = point-fit (cover-fit search), rate-limited so the box tracks
                          # the driving-arc turn but never spins on noise (≈2.9°/f cap, ~GT-rate + headroom).
                          "yaw_alpha_veh": 0.5, "yaw_rate_veh": 0.05}}
-    if _scene26(scene):
-        return {"exclude_classes": [2], "exclude_objs": [11],
-                "person_class_sizes": {1: [1.214, 2.313, 2.155]}, "person_yaw": True,
-                "manual": [{"cls": 1, "obj": 11}], "tight_footprint": False, "multi_candidate": False}
     # scene 27 (+ other real scenes): persons keep the OLD size estimation (no radius cap) but use
     # the multi-candidate wide→narrow search (closest valid mode, dedup re-selects alternatives).
     # ``algo`` = the LOCKED per-scene online-smoothing profile (clamp + adaptive low-pass + lost-counter

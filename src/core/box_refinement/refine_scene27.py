@@ -4,9 +4,7 @@
         --input "<...>/Warehouse_027.txt" --dataset /home/vsw/ws/data --gpu 1 \
         --output <scratch> --no-keep-ply
 
-People are located by coarse-to-fine mean-shift on the BEV cloud; the two vehicles are parked and
-emitted at a hand-verified pose. A zone mask (`zones/Warehouse_027/zone_new`) drops the image
-regions where this scene's calibration is unreliable. The algorithm lives in `scenes/realworld.py`;
+The algorithm lives in `scenes/realworld.py`;
 the frame loop is shared with scene 25 and lives in `engine/orchestrator.py`.
 """
 from .cli import main
