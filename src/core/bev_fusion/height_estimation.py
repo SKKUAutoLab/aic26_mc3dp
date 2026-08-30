@@ -216,7 +216,7 @@ class PersonHeightSampler:
 		"""Log acceptance/rejection counts and the scene/per-camera statistics.
 
 		Cross-camera median agreement is the primary no-GT sanity signal; the
-		scene median landing near an independently hand-tuned value validates
+		scene median landing near an independently value validates
 		the method.
 		"""
 		total_rejected = sum(self.rejections.values())
