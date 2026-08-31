@@ -25,12 +25,6 @@ echo "###########################"
 
 python src/core/run_pipeline.py --config configs/warehouse_023.yaml
 
-python -m src.core.filter_object_noise.run_filter \
-  --input      $FOLDER_OUTPUT/mots_multi/Warehouse_023.txt \
-  --dataset    $FOLDER_INPUT \
-  --pose-model $POSE_MODEL \
-  --output     $FOLDER_OUTPUT \
-  --gpu        0
 
 echo "###########################"
 echo "CURRENT_TIME: $(date +%Y-%m-%d_%H:%M:%S)"
@@ -38,26 +32,12 @@ echo "###########################"
 
 python src/core/run_pipeline.py --config configs/warehouse_024.yaml
 
-python -m src.core.filter_object_noise.run_filter \
-  --input      $FOLDER_OUTPUT/mots_multi/Warehouse_024.txt \
-  --dataset    $FOLDER_INPUT \
-  --pose-model $POSE_MODEL \
-  --output     $FOLDER_OUTPUT \
-  --gpu        0
-
 echo "###########################"
 echo "CURRENT_TIME: $(date +%Y-%m-%d_%H:%M:%S)"
 echo "###########################"
 
 python src/core/run_pipeline.py --config configs/warehouse_025.yaml
 
-python -m src.core.box_refinement.refine_scene25 \
-  --input   $FOLDER_OUTPUT/mots_multi/Warehouse_025.txt \
-  --dataset $FOLDER_INPUT \
-  --output  $FOLDER_OUTPUT \
-  --split   test \
-  --gpu     0 \
-  --keep-ply
 
 echo "###########################"
 echo "CURRENT_TIME: $(date +%Y-%m-%d_%H:%M:%S)"
@@ -71,25 +51,17 @@ echo "###########################"
 
 python src/core/run_pipeline.py --config configs/warehouse_027.yaml
 
-python -m src.core.box_refinement.refine_scene27 \
-  --input   $FOLDER_OUTPUT/mots_multi/Warehouse_027.txt \
-  --dataset $FOLDER_INPUT \
-  --output  $FOLDER_OUTPUT \
-  --split   test \
-  --gpu     0 \
-  --keep-ply
-
 echo "###########################"
 echo "CURRENT_TIME: $(date +%Y-%m-%d_%H:%M:%S)"
 echo "###########################"
 
 python tools/build_submission.py  \
 	--result   \
-		"$FOLDER_OUTPUT/Warehouse_023/Warehouse_023_filtered.txt"  \
-		"$FOLDER_OUTPUT/Warehouse_024/Warehouse_024_filtered.txt"  \
-		"$FOLDER_OUTPUT/Warehouse_025/Warehouse_025_refined.txt"  \
+		"$FOLDER_OUTPUT/mots_multi/Warehouse_023.txt"  \
+		"$FOLDER_OUTPUT/mots_multi/Warehouse_024.txt"  \
+		"$FOLDER_OUTPUT/mots_multi/Warehouse_025.txt"  \
 		"$FOLDER_OUTPUT/mots_multi/Warehouse_026.txt"  \
-		"$FOLDER_OUTPUT/Warehouse_027/Warehouse_027_refined.txt"  \
+		"$FOLDER_OUTPUT/mots_multi/Warehouse_027.txt"  \
 	--output $FOLDER_OUTPUT/mots_multi/track1.txt
 
 echo "###########################"

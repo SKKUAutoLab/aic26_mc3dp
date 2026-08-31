@@ -130,11 +130,7 @@ The dataset folder structure should be as following:
 │   │   └── Warehouse_027
 ```
 
-### b. Training Dataset
 
-You can download traing dataset from:
-
-https://drive.google.com/drive/folders/1FXWxqM2t09KGYVDnTSPTBgaZLAHV4g1V?usp=sharing
 
 ---
 ## VII. Environment setup
@@ -224,7 +220,21 @@ After running all command above, the output files will be in the folder
 ```
 
 ---
-## IX. Citation
+## IX. Training Process
+
+The full training procedure lives in a separate document: **[TRAIN.md](TRAIN.md)**.
+
+| Section | Contents |
+| :--- | :--- |
+| [1. Object detection](TRAIN.md#1-object-detection) | Annotation preprocessing, per-scene detector hyperparameters, RF-DETR and YOLO26 training commands, and where to place the resulting checkpoints. |
+| [2. Re-Identification](TRAIN.md#2-re-identification) | Re-ID feature extractor. |
+| [3. Pose Estimation](TRAIN.md#3-pose-estimation) | Pose Estimation. |
+| [4. Depth Estimation](TRAIN.md#4-depth-estimation) | Depth Estimation. |
+
+The released weights in section VII.c are the output of that procedure — you only need `TRAIN.md` to reproduce or retrain them.
+
+---
+## X. Citation
 
 ```bibtex
 @INPROCEEDINGS{Tran2026Syn2RealTrack,
@@ -236,7 +246,7 @@ After running all command above, the output files will be in the folder
 ```
 
 ---
-## X. Acknowledgement
+## XI. Acknowledgement
 
 Most of the code is adapted from [Mon](https://github.com/phlong3105/mon).
 
